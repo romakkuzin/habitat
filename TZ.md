@@ -88,3 +88,136 @@
 8. Изменения в ходе реализации
 
 (Этот раздел будет обновлён при значимых отклонениях от текущего ТЗ)
+
+9. ER-диаграмма (схема связей моделей)
+
+Ниже — Mermaid ER-диаграмма связей между основными сущностями.
+
+```mermaid
+erDiagram
+    USER ||--o{ HABIT : owns
+    HABIT ||--o{ HABITSESSION : has
+    HABIT ||--o{ PRODUCTIVITYREPORT : aggregates
+    HABIT }o--o{ TAG : tagged_with
+
+    USER {
+      int id
+      string username
+      string email
+    }
+    HABIT {
+      int id
+      string title
+      int target_frequency
+      bool is_active
+    }
+    HABITSESSION {
+      int id
+      datetime start_time
+      datetime end_time
+      int duration_minutes
+      int interruptions
+    }
+    TAG {
+      int id
+      string name
+      string slug
+    }
+    PRODUCTIVITYREPORT {
+      int id
+      date date
+      int total_minutes
+      float avg_session_length
+      int sessions_count
+      float focus_score
+    }
+```
+
+Entities:
+- User: стандартная модель auth.User
+- Habit: принадлежит User, имеет M2M на Tag
+- HabitSession: FK -> Habit, FK -> User (для быстрого доступа)
+- Tag: метки для привычек
+- ProductivityReport: предварительно вычисляемые агрегаты по пользователю и дате
+
+10. Подробные Use Case сценарии и алгоритмы
+
+Use Case 1 — Регистрация и вход
+- Actors: Гость
+- Предусловия: пользователь имеет email и пароль
+- Шаги:
+	1. Пользователь открывает страницу регистрации.
+	2. Вводит email, пароль, подтверждение пароля (валидация на `UserCreationForm` и кастомной форме).
+	3. На успешную регистрацию создаётся User и происходит автоматический вход.
+- Результат: Redirect на личный дашборд.
+
+Use Case 2 — CRUD привычек
+- Actors: Пользователь
+- Предусловия: пользователь аутентифицирован
+- Шаги:
+	1. Пользователь открывает список привычек (`/habits/`).
+	2. Нажимает "Создать привычку" — открывается `HabitForm` (ModelForm) с полями: title, description, target_frequency, tags, is_active.
+	3. Валидация: `title` required, `target_frequency` >= 0.
+	4. При сохранении создаётся `Habit` с `user=request.user`.
+	5. Редактирование/удаление реализуется аналогично.
+- API: CRUD endpoints `/api/habits/` с правами только для владельца.
+
+Use Case 3 — Логирование сессии (HabitSession)
+- Actors: Пользователь
+- Шаги:
+	1. Открывает страницу привычки и нажимает "Добавить сессию".
+	2. Вводит `start_time`, `end_time`, `interruptions`, `notes`.
+	3. Серверная валидация: `end_time > start_time`; `interruptions >= 0`.
+	4. При сохранении модель автоматически вычисляет `duration_minutes = int((end_time - start_time).total_seconds() / 60)` в `save()` или через signal.
+	5. После создания сессии триггерится обновление агрегатов: пересчёт дневного `ProductivityReport` для пользователя и даты `start_time.date()`.
+
+Use Case 4 — Генерация дашборда и визуализация
+- Actors: Пользователь
+- Шаги:
+	1. Пользователь переходит на `/dashboard/`.
+	2. Сервер собирает агрегаты: суммарное время за выбранный период, средняя длина сессии, количество сессий, показатели по тэгам.
+	3. Для интерактивных графиков фронтенд запрашивает `/api/reports/summary/?range=30d` и получает JSON с временной серией.
+	4. Chart.js визуализирует данные; Heatmap по часу суток строится на основе группировки `EXTRACT(hour FROM start_time)`.
+
+Algorithm — предвычисление отчётов (management command `compute_reports`):
+- Для каждого пользователя и каждого дня в периоде:
+	- Собрать `sessions = HabitSession.objects.filter(user=user, start_time__date=day)`
+	- Вычислить `total_minutes = Sum('duration_minutes')`, `sessions_count = Count('id')`, `avg_session_length = Avg('duration_minutes')`, `avg_interruptions = Avg('interruptions')` через ORM-агрегации.
+	- Рассчитать `focus_score` как взвешенная метрика. Пример формулы:
+
+$$
+focus\_score = 100 * \frac{\min(\text{avg\_session\_length}, 120)}{120} * \left(1 - \frac{\text{avg\_interruptions}}{(\text{sessions\_count} + 1)}\right)
+$$
+
+	- Записать/обновить `ProductivityReport(user=user, date=day, total_minutes=..., avg_session_length=..., sessions_count=..., focus_score=... )`.
+	- Для скользящих метрик (7/14/30 дней) использовать `pandas` для расчёта rolling-averages по time-series; в MVP можно комбинировать ORM и Pandas для выбранных периодов.
+
+Use Case 5 — Администрирование (кастомный интерфейс)
+- Actors: Admin
+- Шаги:
+	1. Admin логинится через кастомную страницу администратора (не дефолтный `/admin/`).
+	2. Имеет доступ к списку пользователей, привычек и сессий и может выполнять CRUD через собственный UI.
+
+11. План автоматического тестирования (цели и приоритеты)
+
+Цель: покрыть бизнес-логику тестами, чтобы изменения в агрегациях и подсчётах были безопасными.
+
+Обязательные тесты:
+- `tests/test_models.py`:
+	- Проверка корректного вычисления `duration_minutes` при сохранении `HabitSession`.
+	- Проверка ограничения: `end_time > start_time`.
+	- Тест для `ProductivityReport` — создание сессий и проверка расчётных агрегатов и `focus_score`.
+- `tests/test_aggregations.py`:
+	- Тест management command `compute_reports`: генерируем фикстуры и проверяем, что `ProductivityReport` созданы с ожидаемыми значениями, включая rolling averages (если реализованы).
+- `tests/test_api.py`:
+	- Тесты CRUD для `/api/habits/` и `/api/sessions/` с использованием `APIClient` и проверкой прав доступа (только владелец может модифицировать).
+- `tests/test_views.py` (интеграционные):
+	- Проверка, что дашборд возвращает корректный контекст и что Chart.js получает корректные JSON-ответы.
+
+Автоматизация CI (опционально): добавить GitHub Actions workflow для запуска `pytest` и линтинга при push.
+
+12. Изменения в ходе реализации
+
+Любые существенные отклонения от описанного ТЗ будут документироваться ниже с датой и коротким описанием причин.
+
+--
