@@ -1,0 +1,40 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Мой дашборд — Habits Productivity{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>Личный дашборд</h1>
+    <p>Привет, {{ user.username }}. Последние отчёты и активность за последние 30 дней.</p>
+</div>
+<div class="card">
+    <h2>Сводка</h2>
+    <table class="table">
+        <tr><th>Всего привычек</th><td>{{ habit_count }}</td></tr>
+        <tr><th>Активных привычек</th><td>{{ active_habit_count }}</td></tr>
+        <tr><th>Всего сессий</th><td>{{ total_sessions }}</td></tr>
+        <tr><th>Общее время</th><td>{{ total_minutes }} мин</td></tr>
+        <tr><th>Средний фокус</th><td>{{ avg_focus_score }}</td></tr>
+    </table>
+</div>
+<div class="card">
+    <h2>Последние сессии</h2>
+    {% if recent_sessions %}
+        <table class="table">
+            <thead>
+                <tr><th>Привычка</th><th>Дата</th><th>Длительность</th><th>Прерывания</th></tr>
+            </thead>
+            <tbody>
+                {% for session in recent_sessions %}
+                    <tr>
+                        <td>{{ session.habit.title }}</td>
+                        <td>{{ session.start_time|date:'Y-m-d H:i' }}</td>
+                        <td>{{ session.duration_minutes }} мин</td>
+                        <td>{{ session.interruptions }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Пока нет записанных сессий.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Главная — Habits Productivity{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>Добро пожаловать в сервис анализа привычек</h1>
+    <p>Здесь вы можете регистрировать привычки, логировать сессии и получать ежедневные отчёты продуктивности.</p>
+    {% if user.is_authenticated %}
+        <p><a class="button" href="{% url 'dashboard' %}">Перейти в дашборд</a></p>
+    {% else %}
+        <p><a class="button" href="{% url 'register' %}">Зарегистрироваться</a> или <a class="button" href="{% url 'login' %}">Войти</a></p>
+    {% endif %}
+</div>
+<div class="card">
+    <h2>API</h2>
+    <p>REST API доступно по пути <code>/api/</code>. Доступные ресурсы: <code>tags</code>, <code>habits</code>, <code>sessions</code>, <code>reports</code>.</p>
+</div>
+{% endblock %}

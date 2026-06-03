@@ -1,0 +1,23 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Регистрация — Habits Productivity{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>Регистрация нового пользователя</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <label for="id_username">Имя пользователя</label>
+        {{ form.username }}
+        <label for="id_email">Email</label>
+        {{ form.email }}
+        <label for="id_password1">Пароль</label>
+        {{ form.password1 }}
+        <label for="id_password2">Подтверждение пароля</label>
+        {{ form.password2 }}
+        <div class="form-actions">
+            <button class="button" type="submit">Создать аккаунт</button>
+        </div>
+    </form>
+    <p>Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
+</div>
+{% endblock %}
