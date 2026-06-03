@@ -108,3 +108,7 @@ class Command(BaseCommand):
         self.stdout.write(f'  Метки: {Tag.objects.count()}')
         self.stdout.write(f'  Привычки: {Habit.objects.count()}')
         self.stdout.write(f'  Сессии: {HabitSession.objects.count()}')
+
+        # Пересчитываем отчёты после генерации данных.
+        from django.core.management import call_command
+        call_command('compute_reports', '--days', '30')
