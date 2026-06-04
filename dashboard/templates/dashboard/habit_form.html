@@ -1,0 +1,25 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{{ title }} — Habits Productivity{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>{{ title }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+                <small>{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+                <p style="color:#b91c1c;margin:0.25rem 0 0;">{{ error }}</p>
+            {% endfor %}
+        {% endfor %}
+        <div class="form-actions">
+            <button class="button" type="submit">Сохранить</button>
+            <a class="button" href="{% url 'habit_list' %}" style="background:#6b7280;">Отменить</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

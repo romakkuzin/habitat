@@ -16,4 +16,13 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('habits/', views.habit_list, name='habit_list'),
+    path('habits/create/', views.habit_create, name='habit_create'),
+    path('habits/<int:pk>/', views.habit_detail, name='habit_detail'),
+    path('habits/<int:pk>/edit/', views.habit_edit, name='habit_edit'),
+    path('habits/<int:pk>/delete/', views.habit_delete, name='habit_delete'),
+    path('habits/<int:habit_pk>/sessions/create/', views.session_create, name='session_create'),
+    path('sessions/<int:pk>/edit/', views.session_edit, name='session_edit'),
+    path('sessions/<int:pk>/delete/', views.session_delete, name='session_delete'),
+    path('reports/', views.reports_view, name='reports'),
 ]

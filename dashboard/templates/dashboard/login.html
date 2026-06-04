@@ -1,19 +1,23 @@
 {% extends 'dashboard/base.html' %}
 {% block title %}Вход — Habits Productivity{% endblock %}
 {% block content %}
-<div class="card">
-    <h1>Войти</h1>
-    <form method="post">
+<div class="mx-auto max-w-xl rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <h1 class="text-2xl font-semibold text-slate-900">Войти</h1>
+    <form method="post" class="mt-6 space-y-6">
         {% csrf_token %}
         {{ form.non_field_errors }}
-        <label for="id_username">Имя пользователя</label>
-        {{ form.username }}
-        <label for="id_password">Пароль</label>
-        {{ form.password }}
-        <div class="form-actions">
-            <button class="button" type="submit">Войти</button>
+        <div>
+            <label for="id_username" class="block text-sm font-semibold text-slate-700">Имя пользователя</label>
+            {{ form.username }}
+        </div>
+        <div>
+            <label for="id_password" class="block text-sm font-semibold text-slate-700">Пароль</label>
+            {{ form.password }}
+        </div>
+        <div>
+            <button class="inline-flex w-full justify-center rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700">Войти</button>
         </div>
     </form>
-    <p>Нет аккаунта? <a href="{% url 'register' %}">Зарегистрироваться</a></p>
+    <p class="mt-6 text-sm text-slate-600">Нет аккаунта? <a href="{% url 'register' %}" class="font-semibold text-sky-600 hover:text-sky-700">Зарегистрироваться</a></p>
 </div>
 {% endblock %}

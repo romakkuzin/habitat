@@ -1,17 +1,20 @@
 {% extends 'dashboard/base.html' %}
 {% block title %}Главная — Habits Productivity{% endblock %}
 {% block content %}
-<div class="card">
-    <h1>Добро пожаловать в сервис анализа привычек</h1>
-    <p>Здесь вы можете регистрировать привычки, логировать сессии и получать ежедневные отчёты продуктивности.</p>
-    {% if user.is_authenticated %}
-        <p><a class="button" href="{% url 'dashboard' %}">Перейти в дашборд</a></p>
-    {% else %}
-        <p><a class="button" href="{% url 'register' %}">Зарегистрироваться</a> или <a class="button" href="{% url 'login' %}">Войти</a></p>
-    {% endif %}
+<div class="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <h1 class="text-3xl font-semibold text-slate-900">Добро пожаловать в сервис анализа привычек</h1>
+    <p class="mt-4 text-slate-600">Здесь вы можете регистрировать привычки, логировать сессии и получать ежедневные отчёты продуктивности.</p>
+    <div class="mt-6 flex flex-wrap gap-3">
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}" class="inline-flex items-center justify-center rounded-full bg-sky-600 px-5 py-3 text-white shadow-sm transition hover:bg-sky-700">Перейти в дашборд</a>
+        {% else %}
+            <a href="{% url 'register' %}" class="inline-flex items-center justify-center rounded-full bg-sky-600 px-5 py-3 text-white shadow-sm transition hover:bg-sky-700">Зарегистрироваться</a>
+            <a href="{% url 'login' %}" class="inline-flex items-center justify-center rounded-full bg-slate-200 px-5 py-3 text-slate-700 transition hover:bg-slate-300">Войти</a>
+        {% endif %}
+    </div>
 </div>
-<div class="card">
-    <h2>API</h2>
-    <p>REST API доступно по пути <code>/api/</code>. Доступные ресурсы: <code>tags</code>, <code>habits</code>, <code>sessions</code>, <code>reports</code>.</p>
+<div class="mt-6 rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <h2 class="text-2xl font-semibold text-slate-900">API</h2>
+    <p class="mt-3 text-slate-600">REST API доступно по пути <code class="rounded bg-slate-100 px-1 py-0.5">/api/</code>. Доступные ресурсы: <code class="rounded bg-slate-100 px-1 py-0.5">tags</code>, <code class="rounded bg-slate-100 px-1 py-0.5">habits</code>, <code class="rounded bg-slate-100 px-1 py-0.5">sessions</code>, <code class="rounded bg-slate-100 px-1 py-0.5">reports</code>.</p>
 </div>
 {% endblock %}

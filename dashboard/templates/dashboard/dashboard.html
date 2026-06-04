@@ -1,40 +1,65 @@
 {% extends 'dashboard/base.html' %}
 {% block title %}Мой дашборд — Habits Productivity{% endblock %}
 {% block content %}
-<div class="card">
-    <h1>Личный дашборд</h1>
-    <p>Привет, {{ user.username }}. Последние отчёты и активность за последние 30 дней.</p>
+<div class="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+    <section class="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+        <h1 class="text-3xl font-semibold text-slate-900">Личный дашборд</h1>
+        <p class="mt-4 text-slate-600">Привет, {{ user.username }}. Последние отчёты и активность за последние 30 дней.</p>
+        <div class="mt-8 grid gap-4 sm:grid-cols-2">
+            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <p class="text-sm font-medium text-slate-500">Всего привычек</p>
+                <p class="mt-2 text-3xl font-semibold text-slate-900">{{ habit_count }}</p>
+            </div>
+            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <p class="text-sm font-medium text-slate-500">Активных привычек</p>
+                <p class="mt-2 text-3xl font-semibold text-slate-900">{{ active_habit_count }}</p>
+            </div>
+            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <p class="text-sm font-medium text-slate-500">Всего сессий</p>
+                <p class="mt-2 text-3xl font-semibold text-slate-900">{{ total_sessions }}</p>
+            </div>
+            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <p class="text-sm font-medium text-slate-500">Общее время</p>
+                <p class="mt-2 text-3xl font-semibold text-slate-900">{{ total_minutes }} мин</p>
+            </div>
+        </div>
+    </section>
+    <section class="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+        <h2 class="text-2xl font-semibold text-slate-900">Фокус за 30 дней</h2>
+        <p class="mt-4 text-slate-600">Средняя метрика продуктивности за последние 30 дней.</p>
+        <div class="mt-8 rounded-3xl bg-slate-50 p-6 text-center">
+            <p class="text-sm uppercase tracking-[0.2em] text-slate-500">Средний фокус</p>
+            <p class="mt-4 text-5xl font-semibold text-slate-900">{{ avg_focus_score }}</p>
+        </div>
+    </section>
 </div>
-<div class="card">
-    <h2>Сводка</h2>
-    <table class="table">
-        <tr><th>Всего привычек</th><td>{{ habit_count }}</td></tr>
-        <tr><th>Активных привычек</th><td>{{ active_habit_count }}</td></tr>
-        <tr><th>Всего сессий</th><td>{{ total_sessions }}</td></tr>
-        <tr><th>Общее время</th><td>{{ total_minutes }} мин</td></tr>
-        <tr><th>Средний фокус</th><td>{{ avg_focus_score }}</td></tr>
-    </table>
-</div>
-<div class="card">
-    <h2>Последние сессии</h2>
+<div class="mt-6 rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <h2 class="text-2xl font-semibold text-slate-900">Последние сессии</h2>
     {% if recent_sessions %}
-        <table class="table">
-            <thead>
-                <tr><th>Привычка</th><th>Дата</th><th>Длительность</th><th>Прерывания</th></tr>
-            </thead>
-            <tbody>
-                {% for session in recent_sessions %}
+        <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
                     <tr>
-                        <td>{{ session.habit.title }}</td>
-                        <td>{{ session.start_time|date:'Y-m-d H:i' }}</td>
-                        <td>{{ session.duration_minutes }} мин</td>
-                        <td>{{ session.interruptions }}</td>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-slate-700">Привычка</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-slate-700">Дата</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-slate-700">Длительность</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-slate-700">Прерывания</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="divide-y divide-slate-200 bg-white">
+                    {% for session in recent_sessions %}
+                        <tr>
+                            <td class="px-4 py-4 text-sm text-slate-700">{{ session.habit.title }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-500">{{ session.start_time|date:'Y-m-d H:i' }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-700">{{ session.duration_minutes }} мин</td>
+                            <td class="px-4 py-4 text-sm text-slate-700">{{ session.interruptions }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
-        <p>Пока нет записанных сессий.</p>
+        <p class="mt-4 text-slate-600">Пока нет записанных сессий.</p>
     {% endif %}
 </div>
 {% endblock %}

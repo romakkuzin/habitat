@@ -1,0 +1,54 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{{ habit.title }} — Habits Productivity{% endblock %}
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <h1>{{ habit.title }}</h1>
+            <p>{{ habit.description }}</p>
+            <p>Цель в неделю: {{ habit.target_frequency }}</p>
+            <p>Активна: {{ habit.is_active|yesno:'Да,Нет' }}</p>
+            <p>Теги: {% for tag in habit.tags.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% empty %}нет{% endfor %}</p>
+        </div>
+        <div style="text-align:right;">
+            <a class="button" href="{% url 'habit_edit' habit.pk %}">Редактировать</a>
+            <form method="post" action="{% url 'habit_delete' habit.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button class="button" type="submit" style="background:#dc2626;">Удалить</button>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Сессии</h2>
+        <a class="button" href="{% url 'session_create' habit.pk %}">Добавить сессию</a>
+    </div>
+    {% if sessions %}
+        <table class="table">
+            <thead>
+                <tr><th>Дата</th><th>Длительность</th><th>Прерывания</th><th>Заметки</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for session in sessions %}
+                    <tr>
+                        <td>{{ session.start_time|date:'Y-m-d H:i' }}</td>
+                        <td>{{ session.duration_minutes }} мин</td>
+                        <td>{{ session.interruptions }}</td>
+                        <td>{{ session.notes|default:'—' }}</td>
+                        <td>
+                            <a href="{% url 'session_edit' session.pk %}">Изменить</a> ·
+                            <form method="post" action="{% url 'session_delete' session.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button class="button" type="submit" style="background:#dc2626; padding:0.4rem 0.65rem; font-size:0.85rem;">Удалить</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Пока нет ни одной сессии для этой привычки.</p>
+    {% endif %}
+</div>
+{% endblock %}

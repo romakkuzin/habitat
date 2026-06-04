@@ -1,0 +1,38 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Привычки — Habits Productivity{% endblock %}
+{% block content %}
+<div class="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 class="text-2xl font-semibold text-slate-900">Мои привычки</h1>
+        <a href="{% url 'habit_create' %}" class="inline-flex items-center justify-center rounded-full bg-sky-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700">Создать привычку</a>
+    </div>
+    {% if habits %}
+        <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200 bg-white">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-slate-700">Название</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-slate-700">Цель в неделю</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-slate-700">Активна</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-slate-700">Теги</th>
+                        <th class="px-4 py-4 text-left text-sm font-semibold text-slate-700"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for habit in habits %}
+                        <tr>
+                            <td class="px-4 py-4 text-sm text-slate-700"><a href="{% url 'habit_detail' habit.pk %}" class="font-medium text-slate-900 hover:text-sky-600">{{ habit.title }}</a></td>
+                            <td class="px-4 py-4 text-sm text-slate-700">{{ habit.target_frequency }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-700">{{ habit.is_active|yesno:'Да,Нет' }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-600">{% for tag in habit.tags.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+                            <td class="px-4 py-4 text-sm"><a href="{% url 'habit_edit' habit.pk %}" class="text-sky-600 hover:text-sky-700">Редактировать</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="mt-6 text-slate-600">У вас пока нет привычек. Начните с создания новой привычки.</p>
+    {% endif %}
+</div>
+{% endblock %}

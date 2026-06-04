@@ -1,41 +1,33 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Продуктивность{% endblock %}</title>
-    <style>
-        body { font-family: Inter, sans-serif; margin: 0; padding: 0; background: #f4f5f7; color: #111827; }
-        .page { max-width: 1024px; margin: 0 auto; padding: 24px; }
-        .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 12px 30px rgba(15,23,42,0.08); margin-bottom: 24px; }
-        .button { display: inline-block; padding: 0.85rem 1.2rem; border-radius: 999px; background: #2563eb; color: white; text-decoration: none; }
-        input, textarea, select { width: 100%; border: 1px solid #d1d5db; border-radius: 0.75rem; padding: 0.75rem; margin-top: 0.5rem; }
-        label { display: block; margin-top: 1rem; font-weight: 600; }
-        .form-actions { margin-top: 1.25rem; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .nav-links a { margin-left: 12px; color: #2563eb; text-decoration: none; }
-        .table { width: 100%; border-collapse: collapse; }
-        .table th, .table td { padding: 12px 16px; border-bottom: 1px solid #e5e7eb; }
-        .table th { text-align: left; color: #374151; }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
 </head>
-<body>
-<div class="page">
-    <header class="header">
-        <div>
-            <a href="{% url 'home' %}"><strong>Habits Productivity</strong></a>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+<div class="min-h-screen">
+    <header class="border-b border-slate-200 bg-white shadow-sm">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+            <a href="{% url 'home' %}" class="text-xl font-semibold text-slate-900">Habits Productivity</a>
+            <nav class="flex items-center gap-4 text-sm font-medium text-slate-600">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="text-slate-700 hover:text-slate-900">Дашборд</a>
+                    <a href="{% url 'habit_list' %}" class="text-slate-700 hover:text-slate-900">Привычки</a>
+                    <a href="{% url 'reports' %}" class="text-slate-700 hover:text-slate-900">Отчёты</a>
+                    <a href="{% url 'logout' %}" class="rounded-full bg-sky-600 px-4 py-2 text-white hover:bg-sky-700">Выйти</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="rounded-full bg-sky-600 px-4 py-2 text-white hover:bg-sky-700">Войти</a>
+                    <a href="{% url 'register' %}" class="rounded-full bg-slate-200 px-4 py-2 text-slate-700 hover:bg-slate-300">Регистрация</a>
+                {% endif %}
+            </nav>
         </div>
-        <nav class="nav-links">
-            {% if user.is_authenticated %}
-                <a href="{% url 'dashboard' %}">Дашборд</a>
-                <a href="{% url 'logout' %}">Выйти</a>
-            {% else %}
-                <a href="{% url 'login' %}">Войти</a>
-                <a href="{% url 'register' %}">Регистрация</a>
-            {% endif %}
-        </nav>
     </header>
-    {% block content %}{% endblock %}
+    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
 </div>
 </body>
 </html>

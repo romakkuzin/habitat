@@ -1,8 +1,10 @@
+import json
 from datetime import timedelta
 
 from django.db.models import Count, Sum, Avg, Q, F
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
@@ -10,6 +12,8 @@ from rest_framework import filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from .forms import RegistrationForm, LoginForm, HabitForm, HabitSessionForm
 
 from .forms import RegistrationForm, LoginForm
 from .models import Habit, HabitSession, Tag, ProductivityReport
@@ -244,6 +248,132 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('home')
+
+
+@login_required
+def habit_list(request):
+    habits = Habit.objects.filter(user=request.user).prefetch_related('tags').order_by('-created_at')
+    return render(request, 'dashboard/habit_list.html', {'habits': habits})
+
+
+@login_required
+def habit_detail(request, pk):
+    habit = get_object_or_404(Habit, pk=pk, user=request.user)
+    sessions = habit.sessions.order_by('-start_time')
+    return render(request, 'dashboard/habit_detail.html', {
+        'habit': habit,
+        'sessions': sessions,
+    })
+
+
+@login_required
+def habit_create(request):
+    if request.method == 'POST':
+        form = HabitForm(request.POST)
+        if form.is_valid():
+            habit = form.save(commit=False)
+            habit.user = request.user
+            habit.save()
+            form.save_m2m()
+            return redirect('habit_detail', pk=habit.pk)
+    else:
+        form = HabitForm()
+    return render(request, 'dashboard/habit_form.html', {'form': form, 'title': 'Создать привычку'})
+
+
+@login_required
+def habit_edit(request, pk):
+    habit = get_object_or_404(Habit, pk=pk, user=request.user)
+    if request.method == 'POST':
+        form = HabitForm(request.POST, instance=habit)
+        if form.is_valid():
+            form.save()
+            return redirect('habit_detail', pk=habit.pk)
+    else:
+        form = HabitForm(instance=habit)
+    return render(request, 'dashboard/habit_form.html', {'form': form, 'title': 'Редактировать привычку'})
+
+
+@login_required
+def habit_delete(request, pk):
+    habit = get_object_or_404(Habit, pk=pk, user=request.user)
+    if request.method == 'POST':
+        habit.delete()
+        return redirect('habit_list')
+    return render(request, 'dashboard/confirm_delete.html', {
+        'object': habit,
+        'title': 'Удалить привычку',
+        'cancel_url': 'habit_detail',
+        'cancel_args': [habit.pk],
+    })
+
+
+@login_required
+def session_create(request, habit_pk=None):
+    habit = None
+    if habit_pk:
+        habit = get_object_or_404(Habit, pk=habit_pk, user=request.user)
+    if request.method == 'POST':
+        form = HabitSessionForm(request.POST)
+        if form.is_valid():
+            session = form.save(commit=False)
+            session.user = request.user
+            session.save()
+            return redirect('habit_detail', pk=session.habit.pk)
+    else:
+        form = HabitSessionForm(initial={'habit': habit})
+    return render(request, 'dashboard/session_form.html', {
+        'form': form,
+        'title': 'Добавить сессию',
+        'habit': habit,
+    })
+
+
+@login_required
+def session_edit(request, pk):
+    session = get_object_or_404(HabitSession, pk=pk, user=request.user)
+    if request.method == 'POST':
+        form = HabitSessionForm(request.POST, instance=session)
+        if form.is_valid():
+            form.save()
+            return redirect('habit_detail', pk=session.habit.pk)
+    else:
+        form = HabitSessionForm(instance=session)
+    return render(request, 'dashboard/session_form.html', {
+        'form': form,
+        'title': 'Редактировать сессию',
+        'habit': session.habit,
+    })
+
+
+@login_required
+def session_delete(request, pk):
+    session = get_object_or_404(HabitSession, pk=pk, user=request.user)
+    if request.method == 'POST':
+        habit_pk = session.habit.pk
+        session.delete()
+        return redirect('habit_detail', pk=habit_pk)
+    return render(request, 'dashboard/confirm_delete.html', {
+        'object': session,
+        'title': 'Удалить сессию',
+        'cancel_url': 'habit_detail',
+        'cancel_args': [session.habit.pk],
+    })
+
+
+@login_required
+def reports_view(request):
+    user = request.user
+    reports = ProductivityReport.objects.filter(user=user).order_by('-date')[:30]
+    labels = [report.date.strftime('%Y-%m-%d') for report in reports][::-1]
+    focus_scores = [float(report.focus_score) for report in reports][::-1]
+    total_minutes = [report.total_minutes for report in reports][::-1]
+    return render(request, 'dashboard/reports.html', {
+        'reports': reports,
+        'chart_labels': json.dumps(labels),
+        'chart_focus_scores': json.dumps(focus_scores),
+        'chart_total_minutes': json.dumps(total_minutes),
+    })
 
 
 @login_required

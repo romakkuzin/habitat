@@ -1,0 +1,84 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Отчёты — Habits Productivity{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>Отчёты продуктивности</h1>
+    <p>График показывает последние доступные значения focus score и общего времени за день.</p>
+</div>
+<div class="card">
+    <canvas id="reportChart" style="width:100%; max-height:320px;"></canvas>
+</div>
+<div class="card">
+    <h2>Последние отчёты</h2>
+    {% if reports %}
+        <table class="table">
+            <thead>
+                <tr><th>Дата</th><th>Всего минут</th><th>Сессий</th><th>Средняя длина</th><th>Фокус</th></tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                    <tr>
+                        <td>{{ report.date }}</td>
+                        <td>{{ report.total_minutes }}</td>
+                        <td>{{ report.sessions_count }}</td>
+                        <td>{{ report.avg_session_length|floatformat:1 }}</td>
+                        <td>{{ report.focus_score|floatformat:1 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Пока не найдено отчётов. Запишите сессии, чтобы начать получать данные.</p>
+    {% endif %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('reportChart').getContext('2d');
+    const reportChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [
+                {
+                    label: 'Focus score',
+                    data: {{ chart_focus_scores|safe }},
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                    tension: 0.2,
+                    yAxisID: 'score',
+                },
+                {
+                    label: 'Total minutes',
+                    data: {{ chart_total_minutes|safe }},
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    tension: 0.2,
+                    yAxisID: 'minutes',
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                score: {
+                    type: 'linear',
+                    position: 'left',
+                    beginAtZero: true,
+                    suggestedMax: 100,
+                    title: { display: true, text: 'Focus score' }
+                },
+                minutes: {
+                    type: 'linear',
+                    position: 'right',
+                    beginAtZero: true,
+                    title: { display: true, text: 'Total minutes' }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
