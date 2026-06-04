@@ -18,14 +18,23 @@ class Command(BaseCommand):
         ProductivityReport.objects.all().delete()
 
         # Создаём пользователей
-        user1, _ = User.objects.get_or_create(
+        demo_password = 'demo1234'
+
+        user1, created = User.objects.get_or_create(
             username='test_user1',
             defaults={'email': 'user1@example.com'}
         )
-        user2, _ = User.objects.get_or_create(
+        if created or not user1.password or not user1.has_usable_password():
+            user1.set_password(demo_password)
+            user1.save()
+
+        user2, created = User.objects.get_or_create(
             username='test_user2',
             defaults={'email': 'user2@example.com'}
         )
+        if created or not user2.password or not user2.has_usable_password():
+            user2.set_password(demo_password)
+            user2.save()
 
         # Создаём метки
         tags_names = ['Спорт', 'Учёба', 'Работа', 'Чтение', 'Медитация', 'Программирование']
