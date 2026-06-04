@@ -1,31 +1,36 @@
 {% extends 'dashboard/base.html' %}
-{% block title %}{{ title }} — Habits Productivity{% endblock %}
+{% block title %}{{ title }} — Анализ привычек{% endblock %}
 {% block content %}
-<div class="card">
-    <h1>{{ title }}</h1>
-    {% if habit %}
-        <p>Привычка: <strong>{{ habit.title }}</strong></p>
-    {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        {% for field in form %}
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.help_text %}
-                <small>{{ field.help_text }}</small>
-            {% endif %}
-            {% for error in field.errors %}
-                <p style="color:#b91c1c;margin:0.25rem 0 0;">{{ error }}</p>
-            {% endfor %}
-        {% endfor %}
-        <div class="form-actions">
-            <button class="button" type="submit">Сохранить</button>
+<div class="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold text-slate-900">{{ title }}</h1>
             {% if habit %}
-                <a class="button" href="{% url 'habit_detail' habit.pk %}" style="background:#6b7280;">Отменить</a>
-            {% else %}
-                <a class="button" href="{% url 'habit_list' %}" style="background:#6b7280;">Отменить</a>
+                <p class="mt-1 text-sm text-slate-600">Привычка: <strong>{{ habit.title }}</strong></p>
             {% endif %}
+        </div>
+        <a href="{% if habit %}{% url 'habit_detail' habit.pk %}{% else %}{% url 'habit_list' %}{% endif %}" class="inline-flex items-center justify-center rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">Вернуться</a>
+    </div>
+    <form method="post" class="mt-8 space-y-6">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="mt-1 text-sm text-slate-500">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <div class="flex flex-wrap items-center gap-3 pt-4">
+            <button class="inline-flex justify-center rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700" type="submit">Сохранить</button>
+            <a class="inline-flex justify-center rounded-2xl bg-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-300" href="{% if habit %}{% url 'habit_detail' habit.pk %}{% else %}{% url 'habit_list' %}{% endif %}">Отменить</a>
         </div>
     </form>
 </div>

@@ -1,24 +1,31 @@
 {% extends 'dashboard/base.html' %}
-{% block title %}{{ title }} — Habits Productivity{% endblock %}
+{% block title %}{{ title }} — Анализ привычек{% endblock %}
 {% block content %}
-<div class="card">
-    <h1>{{ title }}</h1>
-    <form method="post">
+<div class="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl font-semibold text-slate-900">{{ title }}</h1>
+        <a href="{% url 'habit_list' %}" class="inline-flex items-center justify-center rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">Вернуться к привычкам</a>
+    </div>
+    <form method="post" class="mt-8 space-y-6">
         {% csrf_token %}
-        {{ form.non_field_errors }}
+        {% if form.non_field_errors %}
+            <div class="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">{{ form.non_field_errors }}</div>
+        {% endif %}
         {% for field in form %}
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.help_text %}
-                <small>{{ field.help_text }}</small>
-            {% endif %}
-            {% for error in field.errors %}
-                <p style="color:#b91c1c;margin:0.25rem 0 0;">{{ error }}</p>
-            {% endfor %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="mt-1 text-sm text-slate-500">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                {% endfor %}
+            </div>
         {% endfor %}
-        <div class="form-actions">
-            <button class="button" type="submit">Сохранить</button>
-            <a class="button" href="{% url 'habit_list' %}" style="background:#6b7280;">Отменить</a>
+        <div class="flex flex-wrap items-center gap-3 pt-4">
+            <button class="inline-flex justify-center rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700" type="submit">Сохранить</button>
+            <a class="inline-flex justify-center rounded-2xl bg-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-300" href="{% url 'habit_list' %}">Отменить</a>
         </div>
     </form>
 </div>

@@ -257,6 +257,7 @@ def habit_list(request):
 
 
 @login_required
+@login_required
 def habit_detail(request, pk):
     habit = get_object_or_404(Habit, pk=pk, user=request.user)
     sessions = habit.sessions.order_by('-start_time')

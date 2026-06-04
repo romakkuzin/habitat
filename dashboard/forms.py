@@ -16,7 +16,10 @@ class TailwindFormMixin:
 
 
 class RegistrationForm(TailwindFormMixin, UserCreationForm):
+    username = forms.CharField(label='Имя пользователя')
     email = forms.EmailField(required=True, label='Email')
+    password1 = forms.CharField(label='Пароль', widget=forms.PasswordInput)
+    password2 = forms.CharField(label='Подтверждение пароля', widget=forms.PasswordInput)
 
     class Meta:
         model = User
@@ -38,6 +41,16 @@ class HabitForm(TailwindFormMixin, forms.ModelForm):
     class Meta:
         model = Habit
         fields = ['title', 'description', 'target_frequency', 'is_active', 'tags']
+        labels = {
+            'title': 'Название',
+            'description': 'Описание',
+            'target_frequency': 'Цель в неделю',
+            'is_active': 'Активна',
+            'tags': 'Теги',
+        }
+        help_texts = {
+            'target_frequency': 'Желательное количество раз в неделю',
+        }
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
         }
@@ -47,6 +60,17 @@ class HabitSessionForm(TailwindFormMixin, forms.ModelForm):
     class Meta:
         model = HabitSession
         fields = ['habit', 'start_time', 'end_time', 'interruptions', 'notes']
+        labels = {
+            'habit': 'Привычка',
+            'start_time': 'Начало',
+            'end_time': 'Окончание',
+            'interruptions': 'Прерывания',
+            'notes': 'Заметки',
+        }
+        help_texts = {
+            'interruptions': 'Сколько раз вы прерывались во время сессии',
+            'notes': 'Дополнительные заметки о сессии',
+        }
         widgets = {
             'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),

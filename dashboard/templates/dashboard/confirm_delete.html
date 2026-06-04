@@ -1,19 +1,17 @@
 {% extends 'dashboard/base.html' %}
-{% block title %}{{ title }} — Habits Productivity{% endblock %}
+{% block title %}{{ title }} — Анализ привычек{% endblock %}
 {% block content %}
-<div class="card">
-    <h1>{{ title }}</h1>
-    <p>Вы действительно хотите удалить <strong>{{ object }}</strong>?</p>
-    <form method="post">
+<div class="mx-auto max-w-xl rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <h1 class="text-2xl font-semibold text-slate-900">{{ title }}</h1>
+    <p class="mt-4 text-slate-600">Это действие нельзя будет отменить. Продолжить?</p>
+    <form method="post" class="mt-6 flex flex-wrap gap-3">
         {% csrf_token %}
-        <div class="form-actions">
-            <button class="button" type="submit" style="background:#dc2626;">Удалить</button>
-            {% if cancel_args %}
-                <a class="button" href="{% url cancel_url cancel_args.0 %}" style="background:#6b7280;">Отменить</a>
-            {% else %}
-                <a class="button" href="{% url cancel_url %}" style="background:#6b7280;">Отменить</a>
-            {% endif %}
-        </div>
+        <button class="inline-flex items-center justify-center rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white hover:bg-red-700" type="submit">Удалить</button>
+        {% if cancel_args %}
+            <a class="inline-flex items-center justify-center rounded-2xl bg-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300" href="{% url cancel_url cancel_args.0 %}">Отменить</a>
+        {% else %}
+            <a class="inline-flex items-center justify-center rounded-2xl bg-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300" href="{% url cancel_url %}">Отменить</a>
+        {% endif %}
     </form>
 </div>
 {% endblock %}

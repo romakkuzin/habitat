@@ -1,30 +1,42 @@
 {% extends 'dashboard/base.html' %}
-{% block title %}Регистрация — Habits Productivity{% endblock %}
+{% block title %}Регистрация — Анализ привычек{% endblock %}
 {% block content %}
 <div class="mx-auto max-w-xl rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-    <h1 class="text-2xl font-semibold text-slate-900">Регистрация нового пользователя</h1>
+    <h1 class="text-2xl font-semibold text-slate-900">Регистрация</h1>
     <form method="post" class="mt-6 space-y-6">
         {% csrf_token %}
-        {{ form.non_field_errors }}
-        <div>
-            <label for="id_username" class="block text-sm font-semibold text-slate-700">Имя пользователя</label>
-            {{ form.username }}
-            {{ form.username.errors }}
-        </div>
-        <div>
-            <label for="id_email" class="block text-sm font-semibold text-slate-700">Email</label>
-            {{ form.email }}
-            {{ form.email.errors }}
-        </div>
-        <div>
-            <label for="id_password1" class="block text-sm font-semibold text-slate-700">Пароль</label>
-            {{ form.password1 }}
-            {{ form.password1.errors }}
-        </div>
-        <div>
-            <label for="id_password2" class="block text-sm font-semibold text-slate-700">Подтверждение пароля</label>
-            {{ form.password2 }}
-            {{ form.password2.errors }}
+        {% if form.non_field_errors %}
+            <div class="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="space-y-4">
+            <div>
+                <label for="id_username" class="block text-sm font-semibold text-slate-700">Имя пользователя</label>
+                {{ form.username }}
+                {% for error in form.username.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div>
+                <label for="id_email" class="block text-sm font-semibold text-slate-700">Email</label>
+                {{ form.email }}
+                {% for error in form.email.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div>
+                <label for="id_password1" class="block text-sm font-semibold text-slate-700">Пароль</label>
+                {{ form.password1 }}
+                {% for error in form.password1.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div>
+                <label for="id_password2" class="block text-sm font-semibold text-slate-700">Подтверждение пароля</label>
+                {{ form.password2 }}
+                {% for error in form.password2.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                {% endfor %}
+            </div>
         </div>
         <div>
             <button class="inline-flex w-full justify-center rounded-2xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-700">Создать аккаунт</button>
