@@ -1,7 +1,8 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.utils import timezone
 from dashboard.models import Tag, Habit, HabitSession, ProductivityReport
-from datetime import datetime, timedelta
+from datetime import timedelta
 import random
 
 
@@ -24,7 +25,7 @@ class Command(BaseCommand):
             username='test_user1',
             defaults={'email': 'user1@example.com'}
         )
-        if created or not user1.password or not user1.has_usable_password():
+        if created or not user1.has_usable_password():
             user1.set_password(demo_password)
             user1.save()
 
@@ -32,7 +33,7 @@ class Command(BaseCommand):
             username='test_user2',
             defaults={'email': 'user2@example.com'}
         )
-        if created or not user2.password or not user2.has_usable_password():
+        if created or not user2.has_usable_password():
             user2.set_password(demo_password)
             user2.save()
 
@@ -72,7 +73,7 @@ class Command(BaseCommand):
             habits_user2.append(habit)
 
         # Генерируем сессии за последние 30 дней для user1
-        now = datetime.now()
+        now = timezone.now()
         for habit in habits_user1:
             for days_ago in range(30):
                 date = now - timedelta(days=days_ago)
