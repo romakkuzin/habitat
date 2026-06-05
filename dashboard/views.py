@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 
 from django.db.models import Count, Sum, Avg, Q, F
+from django.db.models.functions import ExtractWeekDay
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
@@ -21,6 +22,114 @@ from .serializers import (
     HabitSerializer, HabitDetailSerializer, HabitSessionSerializer,
     TagSerializer, ProductivityReportSerializer
 )
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth import get_user_model
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import HttpResponse
+import csv
+
+User = get_user_model()
+
+
+def _staff_check(user):
+    return user.is_authenticated and user.is_staff
+
+
+@user_passes_test(_staff_check, login_url='/login/')
+def admin_index(request):
+    """Simple admin dashboard for staff users."""
+    user_count = User.objects.count()
+    habit_count = Habit.objects.count()
+    session_count = HabitSession.objects.count()
+    context = {
+        'user_count': user_count,
+        'habit_count': habit_count,
+        'session_count': session_count,
+    }
+    return render(request, 'dashboard/admin_index.html', context)
+
+
+def _paginate(qs, request, per_page=25):
+    page = request.GET.get('page', 1)
+    paginator = Paginator(qs, per_page)
+    try:
+        items = paginator.page(page)
+    except PageNotAnInteger:
+        items = paginator.page(1)
+    except EmptyPage:
+        items = paginator.page(paginator.num_pages)
+    return items
+
+
+@user_passes_test(_staff_check, login_url='/login/')
+def admin_users(request):
+    qs = User.objects.order_by('username')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        selected = request.POST.getlist('selected')
+        if action == 'delete' and selected:
+            User.objects.filter(id__in=selected).delete()
+        if action == 'export' and selected:
+            users = User.objects.filter(id__in=selected)
+            resp = HttpResponse(content_type='text/csv')
+            resp['Content-Disposition'] = 'attachment; filename="users.csv"'
+            writer = csv.writer(resp)
+            writer.writerow(['id', 'username', 'email', 'is_staff'])
+            for u in users:
+                writer.writerow([u.id, u.username, u.email, u.is_staff])
+            return resp
+
+    users = _paginate(qs, request, per_page=25)
+    return render(request, 'dashboard/admin_users.html', {'users': users})
+
+
+@user_passes_test(_staff_check, login_url='/login/')
+def admin_habits(request):
+    qs = Habit.objects.select_related('user').prefetch_related('tags').order_by('-created_at')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        selected = request.POST.getlist('selected')
+        if action == 'delete' and selected:
+            Habit.objects.filter(id__in=selected).delete()
+        if action == 'export' and selected:
+            habits = Habit.objects.filter(id__in=selected).select_related('user').prefetch_related('tags')
+            resp = HttpResponse(content_type='text/csv')
+            resp['Content-Disposition'] = 'attachment; filename="habits.csv"'
+            writer = csv.writer(resp)
+            writer.writerow(['id', 'title', 'user', 'tags', 'target_frequency', 'is_active'])
+            for h in habits:
+                tags = ','.join([t.name for t in h.tags.all()])
+                writer.writerow([h.id, h.title, h.user.username, tags, h.target_frequency, h.is_active])
+            return resp
+
+    habits = _paginate(qs, request, per_page=25)
+    return render(request, 'dashboard/admin_habits.html', {'habits': habits})
+
+
+@user_passes_test(_staff_check, login_url='/login/')
+def admin_sessions(request):
+    qs = HabitSession.objects.select_related('user', 'habit').order_by('-start_time')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        selected = request.POST.getlist('selected')
+        if action == 'delete' and selected:
+            HabitSession.objects.filter(id__in=selected).delete()
+        if action == 'export' and selected:
+            sessions = HabitSession.objects.filter(id__in=selected).select_related('habit', 'user')
+            resp = HttpResponse(content_type='text/csv')
+            resp['Content-Disposition'] = 'attachment; filename="sessions.csv"'
+            writer = csv.writer(resp)
+            writer.writerow(['id', 'habit', 'user', 'start_time', 'end_time', 'duration_minutes', 'interruptions'])
+            for s in sessions:
+                writer.writerow([s.id, s.habit.title, s.user.username, s.start_time, s.end_time, s.duration_minutes, s.interruptions])
+            return resp
+
+    sessions = _paginate(qs, request, per_page=25)
+    return render(request, 'dashboard/admin_sessions.html', {'sessions': sessions})
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -388,6 +497,18 @@ def dashboard_view(request):
     recent_sessions = HabitSession.objects.filter(user=user).order_by('-start_time')[:10]
     reports = ProductivityReport.objects.filter(user=user, date__gte=thirty_days_ago)
 
+    session_qs = HabitSession.objects.filter(user=user, start_time__gte=thirty_days_ago)
+    avg_session_length = session_qs.aggregate(Avg('duration_minutes'))['duration_minutes__avg'] or 0
+    avg_interruptions = session_qs.aggregate(Avg('interruptions'))['interruptions__avg'] or 0
+    top_habits = Habit.objects.filter(user=user).annotate(session_count=Count('sessions')).order_by('-session_count')[:5]
+
+    weekday_stats_qs = session_qs.annotate(weekday=ExtractWeekDay('start_time')).values('weekday').annotate(count=Count('id')).order_by('weekday')
+    weekday_map = {1: 'Sun', 2: 'Mon', 3: 'Tue', 4: 'Wed', 5: 'Thu', 6: 'Fri', 7: 'Sat'}
+    weekday_stats = [
+        {'weekday': weekday_map.get(item['weekday'], str(item['weekday'])), 'count': item['count']}
+        for item in weekday_stats_qs
+    ]
+
     total_sessions = reports.aggregate(total=Sum('sessions_count'))['total'] or 0
     total_minutes = reports.aggregate(total=Sum('total_minutes'))['total'] or 0
     avg_focus_score = reports.aggregate(avg=Avg('focus_score'))['avg'] or 0
@@ -399,5 +520,10 @@ def dashboard_view(request):
         'total_sessions': total_sessions,
         'total_minutes': total_minutes,
         'avg_focus_score': round(avg_focus_score, 2),
+        'avg_session_length': round(avg_session_length, 1),
+        'avg_interruptions': round(avg_interruptions, 1),
+        'top_habits': top_habits,
+        'weekday_labels': [item['weekday'] for item in weekday_stats],
+        'weekday_counts': [item['count'] for item in weekday_stats],
     }
     return render(request, 'dashboard/dashboard.html', context)

@@ -1,0 +1,76 @@
+{% extends 'dashboard/base.html' %}
+{% block content %}
+<h1 class="text-2xl font-bold">Sessions</h1>
+<form method="post">
+  {% csrf_token %}
+  <div class="mt-4">
+    <select name="action">
+      <option value="">-- Действие --</option>
+      <option value="delete">Удалить выбранные</option>
+      <option value="export">Экспорт CSV</option>
+    </select>
+    <button type="submit" class="ml-2 px-3 py-1 bg-sky-600 text-white rounded">Выполнить</button>
+  </div>
+  <table class="mt-4 w-full">
+    <thead>
+      <tr><th><input type="checkbox" id="select-all-sessions"/></th><th>Habit</th><th>User</th><th>Start</th><th>End</th><th>Duration</th></tr>
+    </thead>
+    <tbody>
+      {% for s in sessions %}
+      <tr>
+        <td><input type="checkbox" name="selected" value="{{ s.id }}"/></td>
+        <td>{{ s.habit.title }}</td>
+        <td>{{ s.user.username }}</td>
+        <td>{{ s.start_time }}</td>
+        <td>{{ s.end_time }}</td>
+        <td>{{ s.duration_minutes }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</form>
+
+<div class="mt-4">
+  <span>Page {{ sessions.number }} of {{ sessions.paginator.num_pages }}</span>
+  <div class="mt-2">
+    {% if sessions.has_previous %}
+      <a href="?page={{ sessions.previous_page_number }}" class="mr-2">Previous</a>
+    {% endif %}
+    {% for p in sessions.paginator.page_range %}
+      {% if p == sessions.number %}
+        <strong>{{ p }}</strong>
+      {% else %}
+        <a href="?page={{ p }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if sessions.has_next %}
+      <a href="?page={{ sessions.next_page_number }}" class="ml-2">Next</a>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.getElementById('select-all-sessions')?.addEventListener('change', function(e){
+  document.querySelectorAll('input[name="selected"]').forEach(cb => cb.checked = e.target.checked);
+});
+</script>
+
+<script>
+// Confirm bulk delete for sessions
+(function(){
+  const form = document.querySelector('form');
+  form?.addEventListener('submit', function(e){
+    const action = (form.querySelector('select[name="action"]') || {}).value;
+    if (action !== 'delete') return;
+    const selected = Array.from(form.querySelectorAll('input[name="selected"]:checked'));
+    if (selected.length === 0){
+      e.preventDefault();
+      alert('Нужно выбрать хотя бы одну сессию для удаления.');
+      return;
+    }
+    const ok = confirm(`Вы уверены, что хотите удалить ${selected.length} сессий(ю)? Это действие необратимо.`);
+    if (!ok) e.preventDefault();
+  });
+})();
+</script>
+{% endblock %}

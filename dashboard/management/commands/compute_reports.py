@@ -91,4 +91,23 @@ class Command(BaseCommand):
                     if deleted:
                         self.stdout.write(f'  Удалён пустой отчёт за {report_date}')
 
+            # Опционально: вычислим скользящие средние focus_score за период, если установлен pandas
+            try:
+                import pandas as pd
+            except Exception:
+                pd = None
+
+            if pd:
+                reports_qs = ProductivityReport.objects.filter(user=user, date__range=(start_date, end_date)).order_by('date')
+                if reports_qs.exists():
+                    df = pd.DataFrame(list(reports_qs.values('date', 'focus_score')))
+                    df['date'] = pd.to_datetime(df['date'])
+                    df = df.set_index('date').sort_index()
+                    for window in (7, 14, 30):
+                        col = f'rolling_focus_{window}'
+                        df[col] = df['focus_score'].rolling(window=window, min_periods=1).mean()
+                    # Выведем краткую статистику для информации
+                    last = df.iloc[-1]
+                    self.stdout.write(f"  Rolling focus (last) for {user.username}: 7d={last.get('rolling_focus_7'):.2f}, 14d={last.get('rolling_focus_14'):.2f}, 30d={last.get('rolling_focus_30'):.2f}")
+
         self.stdout.write(self.style.SUCCESS('✓ Расчёт отчётов завершён.'))

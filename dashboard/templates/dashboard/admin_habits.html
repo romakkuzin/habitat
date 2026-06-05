@@ -1,0 +1,75 @@
+{% extends 'dashboard/base.html' %}
+{% block content %}
+<h1 class="text-2xl font-bold">Habits</h1>
+<form method="post">
+  {% csrf_token %}
+  <div class="mt-4">
+    <select name="action">
+      <option value="">-- Действие --</option>
+      <option value="delete">Удалить выбранные</option>
+      <option value="export">Экспорт CSV</option>
+    </select>
+    <button type="submit" class="ml-2 px-3 py-1 bg-sky-600 text-white rounded">Выполнить</button>
+  </div>
+  <table class="mt-4 w-full">
+    <thead>
+      <tr><th><input type="checkbox" id="select-all-habits"/></th><th>Title</th><th>User</th><th>Target/week</th><th>Active</th></tr>
+    </thead>
+    <tbody>
+      {% for h in habits %}
+      <tr>
+        <td><input type="checkbox" name="selected" value="{{ h.id }}"/></td>
+        <td>{{ h.title }}</td>
+        <td>{{ h.user.username }}</td>
+        <td>{{ h.target_frequency }}</td>
+        <td>{{ h.is_active }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</form>
+
+<div class="mt-4">
+  <span>Page {{ habits.number }} of {{ habits.paginator.num_pages }}</span>
+  <div class="mt-2">
+    {% if habits.has_previous %}
+      <a href="?page={{ habits.previous_page_number }}" class="mr-2">Previous</a>
+    {% endif %}
+    {% for p in habits.paginator.page_range %}
+      {% if p == habits.number %}
+        <strong>{{ p }}</strong>
+      {% else %}
+        <a href="?page={{ p }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if habits.has_next %}
+      <a href="?page={{ habits.next_page_number }}" class="ml-2">Next</a>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.getElementById('select-all-habits')?.addEventListener('change', function(e){
+  document.querySelectorAll('input[name="selected"]').forEach(cb => cb.checked = e.target.checked);
+});
+</script>
+
+<script>
+// Confirm bulk delete for habits
+(function(){
+  const form = document.querySelector('form');
+  form?.addEventListener('submit', function(e){
+    const action = (form.querySelector('select[name="action"]') || {}).value;
+    if (action !== 'delete') return;
+    const selected = Array.from(form.querySelectorAll('input[name="selected"]:checked'));
+    if (selected.length === 0){
+      e.preventDefault();
+      alert('Нужно выбрать хотя бы один элемент для удаления.');
+      return;
+    }
+    const ok = confirm(`Вы уверены, что хотите удалить ${selected.length} привычку(ек)? Это действие необратимо.`);
+    if (!ok) e.preventDefault();
+  });
+})();
+</script>
+{% endblock %}

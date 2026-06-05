@@ -1,0 +1,74 @@
+{% extends 'dashboard/base.html' %}
+{% block content %}
+<h1 class="text-2xl font-bold">Users</h1>
+<form method="post">
+  {% csrf_token %}
+  <div class="mt-4">
+    <select name="action">
+      <option value="">-- Действие --</option>
+      <option value="delete">Удалить выбранные</option>
+      <option value="export">Экспорт CSV</option>
+    </select>
+    <button type="submit" class="ml-2 px-3 py-1 bg-sky-600 text-white rounded">Выполнить</button>
+  </div>
+  <table class="mt-4 w-full">
+    <thead>
+      <tr><th><input type="checkbox" id="select-all-users"/></th><th>Username</th><th>Email</th><th>Is staff</th></tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td><input type="checkbox" name="selected" value="{{ u.id }}"/></td>
+        <td>{{ u.username }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.is_staff }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</form>
+
+<div class="mt-4">
+  <span>Page {{ users.number }} of {{ users.paginator.num_pages }}</span>
+  <div class="mt-2">
+    {% if users.has_previous %}
+      <a href="?page={{ users.previous_page_number }}" class="mr-2">Previous</a>
+    {% endif %}
+    {% for p in users.paginator.page_range %}
+      {% if p == users.number %}
+        <strong>{{ p }}</strong>
+      {% else %}
+        <a href="?page={{ p }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if users.has_next %}
+      <a href="?page={{ users.next_page_number }}" class="ml-2">Next</a>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.getElementById('select-all-users')?.addEventListener('change', function(e){
+  document.querySelectorAll('input[name="selected"]').forEach(cb => cb.checked = e.target.checked);
+});
+</script>
+
+<script>
+// Confirm bulk delete for users
+(function(){
+  const form = document.querySelector('form');
+  form?.addEventListener('submit', function(e){
+    const action = (form.querySelector('select[name="action"]') || {}).value;
+    if (action !== 'delete') return;
+    const selected = Array.from(form.querySelectorAll('input[name="selected"]:checked'));
+    if (selected.length === 0){
+      e.preventDefault();
+      alert('Нужно выбрать хотя бы один элемент для удаления.');
+      return;
+    }
+    const ok = confirm(`Вы уверены, что хотите удалить ${selected.length} пользователя(ей)? Это действие необратимо.`);
+    if (!ok) e.preventDefault();
+  });
+})();
+</script>
+{% endblock %}

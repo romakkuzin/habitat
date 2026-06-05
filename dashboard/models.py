@@ -17,6 +17,18 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        """Автогенерация `slug` из `name`, с учётом уникальности."""
+        if not self.slug and self.name:
+            base = slugify(self.name)
+            slug = base
+            counter = 1
+            while Tag.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
 
 
 class Habit(models.Model):

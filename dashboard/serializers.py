@@ -28,6 +28,20 @@ class HabitSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Целевая частота не может быть отрицательной')
         return value
 
+    def create(self, validated_data):
+        tags = validated_data.pop('tags', [])
+        habit = super().create(validated_data)
+        if tags:
+            habit.tags.set(tags)
+        return habit
+
+    def update(self, instance, validated_data):
+        tags = validated_data.pop('tags', None)
+        habit = super().update(instance, validated_data)
+        if tags is not None:
+            habit.tags.set(tags)
+        return habit
+
 
 class HabitSessionSerializer(serializers.ModelSerializer):
     habit_title = serializers.CharField(source='habit.title', read_only=True)
