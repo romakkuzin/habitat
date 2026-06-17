@@ -49,7 +49,7 @@
 ### Установка на Linux / macOS
 
 ```bash
-cd /home/unusualnick/Desktop/programming/personal/romeo/django-shit
+cd /home/unusualnick/Desktop/programming/personal/roma/django
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
@@ -64,7 +64,7 @@ python manage.py runserver
 ### Установка на Windows
 
 ```powershell
-cd C:\path\to\django-shit
+cd C:\path\to\django
 python -m venv .venv
 .\.venv\Scripts\activate
 python -m pip install --upgrade pip
